@@ -24,7 +24,6 @@ const deleteReportById = (id = null) =>{
 const insertReport = (report = {}) =>{
    
     connection.query("INSERT INTO report_users (message, user_id) VALUES (?,?)", [report.message,report.user_id],function (error, results, fields) {
-        console.log(error)
         if (error) throw error;
     });
 }

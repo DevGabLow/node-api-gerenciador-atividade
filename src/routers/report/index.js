@@ -1,5 +1,6 @@
 const express = require('express');
 const { findByUserId, deleteReportById, insertReport } = require('../../executeSchemas/report');
+const { DELETE_SUCCESS, DELETE_ERROR, INSERT_SUCCESS, INSERT_ERROR } = require('../../util/messages/errors');
 const router = express.Router();
 
 
@@ -21,22 +22,21 @@ router.delete('/byid/:id', (req,res)=>{
     if(+id){
         try {
             deleteReportById(req.params.id);
-            res.status(200).json({message: `DELETADO COM SUCESSO`})
+            res.status(200).json(DELETE_SUCCESS)
         } catch (error) {
-            res.status(500).json({status:500,message: `Houve um problema ao tentar deletar`})
+            res.status(500).json(DELETE_ERROR)
         }
     }
 })
 
 router.post('/insertreport', (req,res)=>{
     const report = req.body.report;
-    console.log(report)
     if(report){
         try {
             insertReport(report);
-            res.status(200).json({message: `DELETADO COM SUCESSO`})
+            res.status(200).json(INSERT_SUCCESS)
         } catch (error) {
-            res.status(500).json({status:500,message: `Houve um problema ao tentar deletar`})
+            res.status(500).json(INSERT_ERROR)
         }
     }
 })
