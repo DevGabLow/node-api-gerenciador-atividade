@@ -16,7 +16,7 @@ const { signIn } = require('../../util/jwt/jwtUtil');
 router.get('/login', async (req, res) => {
 
     if (!req.headers.authorization || req.headers.authorization.indexOf('Basic ') === -1) {
-        return res.status(401).json({ message: 'Not Authorization' });
+        return res.status(401).json(NOT_AUTHORIZATION);
     }
 
     const base64Credentials = req.headers.authorization.split(' ')[1];
@@ -40,9 +40,9 @@ router.get('/login', async (req, res) => {
                     path: "/"
                 });
                 res.setHeader("Set-Cookie", serialized);
-                res.status(200).json({ message: "Success!!" });
+                res.status(200).json({ message: "Logged!" });
             } else {
-                return res.status(401).json({ message: "aaaa" });
+                return res.status(401).json(NOT_AUTHORIZATION);
             }
         });
 

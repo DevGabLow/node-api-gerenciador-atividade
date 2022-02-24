@@ -3,7 +3,7 @@ const connection = require("../../util/db")
 
 
 const findByUserId = (user = { id: null }, callback) => {
-    connection.query(`SELECT * FROM report_users u WHERE u.user_id = '${+user.id}' and u.is_deleted is FALSE`, function (error, results, fields) {
+    connection.query(`SELECT * FROM report_users u WHERE u.user_id = ? and u.is_deleted is FALSE`,[+user.id] ,function (error, results, fields) {
         if (error) throw error;
         if (results.length > 0) {
 
@@ -16,7 +16,7 @@ const findByUserId = (user = { id: null }, callback) => {
 }
 
 const deleteReportById = (id = null) => {
-    connection.query(`DELETE FROM report_users WHERE id = '${id}'`, function (error, results, fields) {
+    connection.query(`DELETE FROM report_users WHERE id = ?`,[id], function (error, results, fields) {
         if (error) throw error;
     });
 }
