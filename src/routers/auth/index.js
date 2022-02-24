@@ -1,10 +1,14 @@
 const express = require('express');
-const router = express.Router();
-const { serialize } = require('cookie');
-const { signIn } = require('../../util/jwt/jwtUtil');
 const bcrypt = require('bcrypt');
+const router = express.Router();
+const passport = require("passport")
+
+const { serialize } = require('cookie');
+
 const { findUser } = require('../../executeSchemas/user');
+
 const { NOT_AUTHORIZATION } = require('../../util/messages/errors');
+const { signIn } = require('../../util/jwt/jwtUtil');
 
 
 
@@ -38,7 +42,7 @@ router.get('/login', async (req, res) => {
                 res.setHeader("Set-Cookie", serialized);
                 res.status(200).json({ message: "Success!!" });
             } else {
-                return res.status(401).json({message: "aaaa"});
+                return res.status(401).json({ message: "aaaa" });
             }
         });
 
@@ -48,12 +52,17 @@ router.get('/login', async (req, res) => {
 
 })
 
-router.get('/logout',(req,res)=>{
-    res.status(202).clearCookie("cookieAuth").json({message:"Logout"});
+router.get('/logout', (req, res) => {
+    res.status(202).clearCookie("cookieAuth").redirect('/auth/redirect')
 })
 
-router.get('/cookieserver', (req,res)=>{
+router.get('/cookieserver', (req, res) => {
     res.json(req.cookies)
+})
+
+router.get("/redirect", (req,res)=>{
+    res.writeHead(301, { "Location": process.env.redirect_url });
+        return res.end();
 })
 
 
@@ -62,5 +71,25 @@ router.get('/cookieserver', (req,res)=>{
 //         return res.json({pass: hash})
 //     })
 // })
+
+//DISCORD
+
+router.get('/discord', passport.authenticate('discord'));
+
+router.get('/discord/redirect', passport.authenticate('discord', {
+    failureRedirect: '/auth/logout'
+}),function(req, res) {
+    const serialized = serialize("passId", req.user.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV !== "development",
+        sameSite: "strict",
+        maxAge: 300,
+        path: "/"
+    });
+    res.setHeader('Set-Cookie',serialized )
+    res.writeHead(301, { "Location": process.env.redirect_url});
+    return res.end();
+});
+
 
 module.exports = router

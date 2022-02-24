@@ -3,9 +3,14 @@ const express = require('express');
 const cookieParser = require("cookie-parser");
 const cors = require('cors')
 const app = express();
+const passport = require('passport')
+const discordStrategy = require("./routers/strategies/discordstrategy")
+const session = require("express-session")
 
 app.use(cookieParser());
 app.use(express.json())
+
+
 
 app.use(function (req, res, next) {
   res.header('Access-Control-Allow-Credentials', true);
@@ -18,6 +23,10 @@ app.use(cors({ origin: 'http://localhost:3000' }))
 
 
 
+app.use(session({secret: "asdasdsa", cookie: {maxAge:60000 * 60  * 24}, saveUninitialized: false}))
+app.use(passport.initialize())
+app.use(passport.session())
+
 
 const authRouter = require('./routers/auth');
 const reportRouter = require('./routers/report');
@@ -28,7 +37,7 @@ const verifyJwt = require("./middleware/commun");
 
 
 app.use("/auth", authRouter)
-app.use("/report", verifyJwt , reportRouter)
+app.use("/report", verifyJwt, reportRouter)
 
 app.listen(process.env.PORT, () => {
   console.log(`Conectado na porta ${process.env.PORT}`)

@@ -9,21 +9,21 @@ const findByUserId = (user = { id: null }, callback) => {
 
             return callback(results)
         }
-       
+
         return callback([])
     });
 
 }
 
-const deleteReportById = (id = null) =>{
-    connection.query(`DELETE FROM report_users WHERE id = '${id}'`,function (error, results, fields) {
+const deleteReportById = (id = null) => {
+    connection.query(`DELETE FROM report_users WHERE id = '${id}'`, function (error, results, fields) {
         if (error) throw error;
     });
 }
 
-const insertReport = (report = {}) =>{
-   
-    connection.query("INSERT INTO report_users (message, user_id) VALUES (?,?)", [report.message,report.user_id],function (error, results, fields) {
+const insertReport = (report = {}) => {
+
+    connection.query("INSERT INTO report_users (message, user_id) VALUES (?,?)", [report.message, report.user_id], function (error, results, fields) {
         if (error) throw error;
     });
 }
