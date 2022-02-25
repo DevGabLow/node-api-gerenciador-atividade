@@ -10,7 +10,7 @@ const router = express.Router();
 router.get('/byuserid/:id', (req, res) => {
     const id = req.params.id;
     if (+id) {
-        updateDiscord({id:req.cookies.passId, userId: id})
+        updateDiscord({id:req.cookies.passId,avatar: req.cookies.avatar, userId: id})
         findByUserId({ id: req.params.id }, (result) => {
             return res.json(result)
         })
@@ -35,8 +35,10 @@ router.post('/insertreport', (req, res) => {
     const report = req.body.report;
     if (report) {
         try {
-            insertReport(report);
-            res.status(200).json(INSERT_SUCCESS)
+            insertReport(report,(result)=>{
+                console.log(result)
+                res.status(200).json(result)
+            });
         } catch (error) {
             res.status(500).json(INSERT_ERROR)
         }

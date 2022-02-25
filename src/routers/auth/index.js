@@ -11,8 +11,6 @@ const { NOT_AUTHORIZATION } = require('../../util/messages/errors');
 const { signIn } = require('../../util/jwt/jwtUtil');
 
 
-
-
 router.get('/login', async (req, res) => {
 
     if (!req.headers.authorization || req.headers.authorization.indexOf('Basic ') === -1) {
@@ -66,11 +64,11 @@ router.get("/redirect", (req,res)=>{
 })
 
 
-// router.get('/gen', (req,res)=>{
-//     bcrypt.hash(req.body.pass, 10).then((hash)=>{
-//         return res.json({pass: hash})
-//     })
-// })
+router.get('/gen', (req,res)=>{
+    bcrypt.hash(req.body.pass, 10).then((hash)=>{
+        return res.json({pass: hash})
+    })
+})
 
 //DISCORD
 
@@ -79,14 +77,11 @@ router.get('/discord', passport.authenticate('discord'));
 router.get('/discord/redirect', passport.authenticate('discord', {
     failureRedirect: '/auth/logout'
 }),function(req, res) {
-    const serialized = serialize("passId", req.user.id, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV !== "development",
-        sameSite: "strict",
-        maxAge: 300,
-        path: "/"
-    });
-    res.setHeader('Set-Cookie',serialized )
+  
+
+
+    res.cookie("passId", req.user.id)
+    res.cookie("avatar",`https://cdn.discordapp.com/avatars/${req.user.id}/${req.user.avatar}`)
     res.writeHead(301, { "Location": process.env.redirect_url});
     return res.end();
 });

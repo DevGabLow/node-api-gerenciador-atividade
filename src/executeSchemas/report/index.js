@@ -21,10 +21,13 @@ const deleteReportById = (id = null) => {
     });
 }
 
-const insertReport = (report = {}) => {
+const insertReport = (report = {}, callback) => {
 
     connection.query("INSERT INTO report_users (message, user_id) VALUES (?,?)", [report.message, report.user_id], function (error, results, fields) {
         if (error) throw error;
+        if( results){
+            return callback(results)
+        }
     });
 }
 
