@@ -5,7 +5,6 @@ function verifyJwt(req, res, next) {
   const token = cookies.cookieAuth;
   if (!token) return res.status(401).json({ message: 'No token provided.' });
 
-
   const tk = verify(token, res);
 
   if (tk) {

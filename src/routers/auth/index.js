@@ -27,6 +27,7 @@ router.get('/login', async (req, res) => {
         }
         bcrypt.compare(password, result.password).then((passwordEquals) => {
             if (passwordEquals) {
+                console.log(result)
                 delete result.password;
                 const token = signIn(result);
 
@@ -34,7 +35,7 @@ router.get('/login', async (req, res) => {
                     httpOnly: true,
                     secure: process.env.NODE_ENV !== "development",
                     sameSite: "strict",
-                    maxAge: 300,
+                    maxAge: 1 * 60 * 60 * 1000, //1h
                     path: "/"
                 });
                 res.setHeader("Set-Cookie", serialized);

@@ -36,7 +36,6 @@ router.post('/insertreport', (req, res) => {
     if (report) {
         try {
             insertReport(report,(result)=>{
-                console.log(result)
                 res.status(200).json(result)
             });
         } catch (error) {
