@@ -27,7 +27,6 @@ router.get('/login', async (req, res) => {
         }
         bcrypt.compare(password, result.password).then((passwordEquals) => {
             if (passwordEquals) {
-                console.log(result)
                 delete result.password;
                 const token = signIn(result);
 
