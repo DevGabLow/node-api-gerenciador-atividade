@@ -1,0 +1,98 @@
+pipeline{
+
+  agent any
+
+  parameters {
+    choice(
+      choices: ['homologacao' , 'producao', 'teste'],
+      description: '',
+      name: 'ambiente')
+  }
+   environment {
+        PORT="4200"
+        SECRET="a1e3f062caa51fd4651f4b68f270c95f5912b01c4d0d95689603f75b4d34e6b9"
+        clientId_Discord="946172169111601223"
+        clientSecretDiscord="-64d0g0XYS9tJ-paoQceARYkmqkxY5xG"
+        callBackDiscord="/auth/discord/redirect"
+        redirect_url="http://localhost:3000/"
+    }
+  stages {
+    stage ('Set Environment') {
+      steps {
+        script {
+          if (params.ambiente.equals('homologacao')){
+            env.SRV01="hml02"
+            env.SRV01_IP="192.168.10.120"
+            env.CONTAINER="${env.JOB_BASE_NAME}"
+            env.PORT="4200"
+            env.URL_NPM_REPOSITORY="http://devapps.cers.com.br/nexus/repository/npm-group/"
+            env.TZ="America/Recife"
+		  }
+          withCredentials([usernamePassword(credentialsId: 'healthcheck_token', usernameVariable: 'USERNAME', passwordVariable: 'PASSWD')]) {
+            env.AUTH="${PASSWD}"
+          }
+        }
+      }
+    }
+    stage ('Build Docker and Push to registry') {
+      steps {
+        echo "Versionando imagem e buildando codigo"
+        script {
+          //configure registry
+          docker.withRegistry("https://${env.REGISTRY}", 'ecr:us-east-1:AWS_ECR') {
+            // build image tagged from BUILD_ID
+            def customImage = docker.build("${env.JOB_BASE_NAME}:${env.BUILD_ID}")
+            // push image tagged from BUILD_ID
+            customImage.push()
+            // push image tagged form hom
+            customImage.push("hom")
+          }
+        }
+      }
+    }
+    stage ('Deploy') {
+      steps {
+        echo "Deploy nos servidores"
+        sh '''
+          echo $'\n'APLICA CONFIGURACOES NO LOOP DE SERVIDORES $SRV01 e $SRV02 $'\n'
+          for SRV in $SRV01 $SRV02
+          do
+            echo $'\n'COPIA NOVO DOCKER COMPOSE NO SERVIDOR $SRV $'\n'
+            tsh scp --proxy=teleport.cers.com.br:443 -i /home/ubuntu/jenkins.pem docker-compose.yaml ubuntu@$SRV:/tmp/docker-compose-$JOB_BASE_NAME.yaml
+
+            echo $'\n'ATUALIZA CONTAINER NO SERVIDOR $SRV $'\n'
+            tsh ssh --proxy=teleport.cers.com.br:443 -i /home/ubuntu/jenkins.pem ubuntu@$SRV \
+            "#EXPORTA VARIAVEIS
+            if [ $SRV = $SRV01 ]
+            then
+              export HOST="$SRV01_IP"
+              export URLHEALTHCHECK="http://$SRV01_IP:$PORT"
+            fi
+            export CONTAINER=$JOB_BASE_NAME
+            export PORT=$PORT
+            export BUILD_ID=$BUILD_ID
+            export REGISTRY=$REGISTRY
+            export SRV=$SRV
+            export AUTH=$AUTH
+            export TZ=$TZ
+
+            #CRIA AMBIENTE NO SERVIDOR $SRV
+            sudo mkdir -p /deploy/$JOB_BASE_NAME
+            sudo mv /tmp/docker-compose-$JOB_BASE_NAME.yaml /deploy/$JOB_BASE_NAME/docker-compose.yaml
+
+            echo $'\n'LOGA NO REGISTRY $'\n'
+            #aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $REGISTRY
+            eval $(aws ecr get-login --no-include-email --region us-east-1)
+
+            echo $'\n'EXIBE CONFIGURACAO A SER APLICADA NO SERVIDOR $SRV $'\n'
+            docker-compose -f /deploy/$JOB_BASE_NAME/docker-compose.yaml config
+
+            echo $'\n'RECRIA CONTAINERS COM ATUALIZACAO NO SERVIDOR $SRV $'\n'
+            docker-compose -f /deploy/$JOB_BASE_NAME/docker-compose.yaml up -d
+            "
+          done
+        '''
+      }
+    }
+  }
+}

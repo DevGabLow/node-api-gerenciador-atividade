@@ -1,0 +1,26 @@
+version: '3.4'
+services:
+  app:
+    container_name: ${CONTAINER:-node-manager-activity}
+    hostname: ${SRV}-${CONTAINER:-node-manager-activity}
+    image: ${REGISTRY:-672821892059.dkr.ecr.us-east-1.amazonaws.com}/${CONTAINER:-node-manager-activity}:${BUILD_ID:-hom}
+    build:
+      context: ./
+    volumes:
+      - .:/src
+    command: npm run start
+    restart: unless-stopped
+    ports:
+    - ${PORT:-4200}:4200
+    environment:
+      HOST: $HOST
+      SRV: $SRV
+      URLHEALTHCHECK: $URLHEALTHCHECK
+      AUTH: $AUTH
+      TZ: $TZ
+    healthcheck:
+      test: 
+        'curl -f --connect-timeout 10 --max-time 10 --retry 3 --retry-delay 10 $URLHEALTHCHECK || bash -c "kill -s 15 -1 && (sleep 10; kill -s 9 -1)"'
+      interval: 3m
+      timeout: 120s
+      retries: 3

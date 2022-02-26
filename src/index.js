@@ -23,7 +23,7 @@ app.use(cors({ origin: 'http://localhost:3000' }))
 
 
 
-app.use(session({secret: "asdasdsa", cookie: {maxAge:60000 * 60  * 24}, saveUninitialized: false}))
+app.use(session({secret: "asdasdsa", cookie: {maxAge:60000 * 60  * 24}, saveUninitialized: false,resave : false}))
 app.use(passport.initialize())
 
 
