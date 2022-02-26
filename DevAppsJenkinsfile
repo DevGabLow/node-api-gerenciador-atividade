@@ -4,7 +4,7 @@ pipeline{
 
   parameters {
     choice(
-      choices: ['homologacao' , 'producao', 'teste'],
+      choices: ['homologacao'],
       description: '',
       name: 'ambiente')
   }
@@ -27,7 +27,7 @@ pipeline{
             env.PORT="4200"
             env.URL_NPM_REPOSITORY="http://devapps.cers.com.br/nexus/repository/npm-group/"
             env.TZ="America/Recife"
-		  }
+		      }
           withCredentials([usernamePassword(credentialsId: 'healthcheck_token', usernameVariable: 'USERNAME', passwordVariable: 'PASSWD')]) {
             env.AUTH="${PASSWD}"
           }
