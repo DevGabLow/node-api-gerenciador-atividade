@@ -1,10 +1,10 @@
 pipeline{
 
   agent any
-
+  
   parameters {
     choice(
-      choices: ['homologacao' , 'producao', 'teste'],
+      choices: ['homologacao' , 'producao'],
       description: '',
       name: 'ambiente')
   }
@@ -13,40 +13,37 @@ pipeline{
       steps {
         script {
           if (params.ambiente.equals('producao')){
-            env.SRV01="cerssv01"
-            env.SRV02="cerssv02"
-            env.SRV01_IP="192.168.12.61"
-            env.SRV02_IP="192.168.11.44"
-            env.CONTAINER="${env.JOB_BASE_NAME}"
-            env.PORT="3021"
-            env.URL_NPM_REPOSITORY="http://devapps.cers.com.br/nexus/repository/npm-group/"
-            env.TZ="America/Recife"
+            env.SRV01="pos01"
+            env.SRV02="pos02"
+            env.SRV01_IP="192.168.11.151"
+            env.SRV02_IP="192.168.12.105"
+            sh '''sed -i 's/true/false/' .env'''
           }else if (params.ambiente.equals('homologacao')){
-            env.SRV01="hml02"
-            //env.SRV02=""
+            env.SRV01="hmlpos01"
+            env.SRV02="hmlpos02"
             env.SRV01_IP="192.168.11.31"
-            //env.SRV02_IP=""
-            env.CONTAINER="${env.JOB_BASE_NAME}"
-            env.PORT="4200"
-            env.URL_NPM_REPOSITORY="http://devapps.cers.com.br/nexus/repository/npm-group/"
-            //env.JAVA_OPTS='-Xmx128m -Duser.timezone=America/Fortaleza'
-            env.TZ="America/Recife"
-		  }else if (params.ambiente.equals('teste')){
-            env.SRV01="lnxhml01"
-            //env.SRV02=""
-            env.SRV01_IP="192.168.11.31"
-            //env.SRV02_IP=""
-            env.CONTAINER="${env.JOB_BASE_NAME}"
-            env.PORT="4200"
-            env.URL_NPM_REPOSITORY="http://devapps.cers.com.br/nexus/repository/npm-group/"
-            env.TZ="America/Recife"
+            env.SRV02_IP="192.168.12.141"
+            sh '''sed -i 's/false/true/' .env'''
           }
+          env.CONTAINER="${env.JOB_BASE_NAME}"
+          env.TZ="America/Recife"
+          env.PORT="4200"
+          env.URL_NPM_REPOSITORY="http://devapps.cers.com.br/nexus/repository/npm-group/"
           withCredentials([usernamePassword(credentialsId: 'healthcheck_token', usernameVariable: 'USERNAME', passwordVariable: 'PASSWD')]) {
             env.AUTH="${PASSWD}"
           }
         }
       }
     }
+    /**
+    stage('SonarQube analysis') {
+      steps{
+		withSonarQubeEnv('SonarQube') {
+            sh '''sonar-scanner -Dsonar.projectKey=$JOB_BASE_NAME -Dsonar.host.url=$SONAR_URL_HOST -Dsonar.login=$SONAR_LOGIN'''
+        }
+      }
+    }
+    **/
     stage ('Build Docker and Push to registry') {
       steps {
         echo "Versionando imagem e buildando codigo"
@@ -76,7 +73,7 @@ pipeline{
           do
             echo $'\n'COPIA NOVO DOCKER COMPOSE NO SERVIDOR $SRV $'\n'
             tsh scp --proxy=teleport.cers.com.br:443 -i /home/ubuntu/jenkins.pem docker-compose.yaml ubuntu@$SRV:/tmp/docker-compose-$JOB_BASE_NAME.yaml
-
+            
             echo $'\n'ATUALIZA CONTAINER NO SERVIDOR $SRV $'\n'
             tsh ssh --proxy=teleport.cers.com.br:443 -i /home/ubuntu/jenkins.pem ubuntu@$SRV \
             "#EXPORTA VARIAVEIS
@@ -84,6 +81,11 @@ pipeline{
             then
               export HOST="$SRV01_IP"
               export URLHEALTHCHECK="http://$SRV01_IP:$PORT"
+            fi
+            if [ $SRV = $SRV02 ]
+            then
+              export HOST="$SRV02_IP"
+              export URLHEALTHCHECK="http://$SRV02_IP:$PORT"
             fi
             export CONTAINER=$JOB_BASE_NAME
             export PORT=$PORT
@@ -96,14 +98,13 @@ pipeline{
             #CRIA AMBIENTE NO SERVIDOR $SRV
             sudo mkdir -p /deploy/$JOB_BASE_NAME
             sudo mv /tmp/docker-compose-$JOB_BASE_NAME.yaml /deploy/$JOB_BASE_NAME/docker-compose.yaml
-
+            
             echo $'\n'LOGA NO REGISTRY $'\n'
-            #aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $REGISTRY
-            eval $(aws ecr get-login --no-include-email --region us-east-1)
-
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $REGISTRY
+            
             echo $'\n'EXIBE CONFIGURACAO A SER APLICADA NO SERVIDOR $SRV $'\n'
             docker-compose -f /deploy/$JOB_BASE_NAME/docker-compose.yaml config
-
+            
             echo $'\n'RECRIA CONTAINERS COM ATUALIZACAO NO SERVIDOR $SRV $'\n'
             docker-compose -f /deploy/$JOB_BASE_NAME/docker-compose.yaml up -d
             "
