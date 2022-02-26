@@ -7,7 +7,7 @@ WORKDIR /app
 COPY ["package.json", "package-lock.json*", "./"]
 
 # Adjust localtime and Install dependencies
-RUN npm install
+RUN cp /usr/share/zoneinfo/America/Fortaleza /etc/localtime && npm i
 
 COPY . .
 
