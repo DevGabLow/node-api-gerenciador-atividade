@@ -17,13 +17,11 @@ pipeline{
             env.SRV02="pos02"
             env.SRV01_IP="192.168.11.151"
             env.SRV02_IP="192.168.12.105"
-            sh '''sed -i 's/true/false/' .env'''
           }else if (params.ambiente.equals('homologacao')){
             env.SRV01="hmlpos01"
             env.SRV02="hmlpos02"
             env.SRV01_IP="192.168.11.31"
             env.SRV02_IP="192.168.12.141"
-            sh '''sed -i 's/false/true/' .env'''
           }
           env.CONTAINER="${env.JOB_BASE_NAME}"
           env.TZ="America/Recife"
