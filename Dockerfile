@@ -15,4 +15,4 @@ COPY . .
 EXPOSE 4200
 
 # Run npm start script with PM2 when container starts
-CMD [ "node", "./src/index.js" ]
+CMD npm run start
