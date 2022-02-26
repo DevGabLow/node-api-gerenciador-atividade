@@ -4,8 +4,6 @@ services:
     container_name: ${CONTAINER:-node-manager-activity}
     hostname: ${SRV}-${CONTAINER:-node-manager-activity}
     image: ${REGISTRY:-672821892059.dkr.ecr.us-east-1.amazonaws.com}/${CONTAINER:-node-manager-activity}:${BUILD_ID:-hom}
-    build:
-      context: ./
     restart: unless-stopped
     ports:
     - ${PORT:-4200}:4200
