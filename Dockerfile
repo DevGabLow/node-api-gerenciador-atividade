@@ -1,6 +1,6 @@
-FROM node:17
+FROM node:10
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
 # Copy package.json and package-lock.json before other files
 # Utilise Docker cache to save re-installing dependencies if unchanged
