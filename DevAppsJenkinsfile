@@ -24,7 +24,7 @@ pipeline{
           }else if (params.ambiente.equals('homologacao')){
             env.SRV01="hml02"
             //env.SRV02=""
-            env.SRV01_IP="192.168.10.120"
+            env.SRV01_IP="192.168.11.31"
             //env.SRV02_IP=""
             env.CONTAINER="${env.JOB_BASE_NAME}"
             env.PORT="4200"
