@@ -1,7 +1,7 @@
 const connection = require("../../util/db")
 
 const rowDefine = {
-    columName: 'users',
+    columName: 'users_report',
     parents: {
         id: "id",
         email: "email",

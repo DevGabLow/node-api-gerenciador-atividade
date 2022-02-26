@@ -21,30 +21,33 @@ router.get('/login', async (req, res) => {
     const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
     const [username, password] = credentials.split(':');
 
-    findUser({ email: username }, (result) => {
-        if (!result) {
-            return res.status(401).json(NOT_AUTHORIZATION);
-        }
-        bcrypt.compare(password, result.password).then((passwordEquals) => {
-            if (passwordEquals) {
-                delete result.password;
-                const token = signIn(result);
-
-                const serialized = serialize("cookieAuth", token, {
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV !== "development",
-                    sameSite: "strict",
-                    maxAge: 1 * 60 * 60 * 1000, //1h
-                    path: "/"
-                });
-                res.setHeader("Set-Cookie", serialized);
-                res.status(200).json({ message: "Logged!" });
-            } else {
+    try {
+        findUser({ email: username }, (result) => {
+            if (!result) {
                 return res.status(401).json(NOT_AUTHORIZATION);
             }
-        });
+            bcrypt.compare(password, result.password).then((passwordEquals) => {
+                if (passwordEquals) {
+                    delete result.password;
+                    const token = signIn(result);
 
-    })
+                    const serialized = serialize("cookieAuth", token, {
+                        httpOnly: true,
+                        secure: process.env.NODE_ENV !== "development",
+                        sameSite: "strict",
+                        maxAge: 1 * 60 * 60 * 1000, //1h
+                        path: "/"
+                    });
+                    res.setHeader("Set-Cookie", serialized);
+                    res.status(200).json({ message: "Logged!" });
+                } else {
+                    return res.status(401).json(NOT_AUTHORIZATION);
+                }
+            });
+        })
+    } catch (error) {
+        return res.status(401).json(NOT_AUTHORIZATION);
+    }
 
 
 
@@ -58,15 +61,15 @@ router.get('/cookieserver', (req, res) => {
     res.json(req.cookies)
 })
 
-router.get("/redirect", (req,res)=>{
+router.get("/redirect", (req, res) => {
     res.writeHead(301, { "Location": process.env.redirect_url });
-        return res.end();
+    return res.end();
 })
 
 
-router.get('/gen', (req,res)=>{
-    bcrypt.hash(req.body.pass, 10).then((hash)=>{
-        return res.json({pass: hash})
+router.get('/gen', (req, res) => {
+    bcrypt.hash(req.body.pass, 10).then((hash) => {
+        return res.json({ pass: hash })
     })
 })
 
@@ -76,13 +79,13 @@ router.get('/discord', passport.authenticate('discord'));
 
 router.get('/discord/redirect', passport.authenticate('discord', {
     failureRedirect: '/auth/logout'
-}),function(req, res) {
-  
+}), function (req, res) {
+
 
 
     res.cookie("passId", req.user.id)
-    res.cookie("avatar",`https://cdn.discordapp.com/avatars/${req.user.id}/${req.user.avatar}`)
-    res.writeHead(301, { "Location": process.env.redirect_url});
+    res.cookie("avatar", `https://cdn.discordapp.com/avatars/${req.user.id}/${req.user.avatar}`)
+    res.writeHead(301, { "Location": process.env.redirect_url });
     return res.end();
 });
 
