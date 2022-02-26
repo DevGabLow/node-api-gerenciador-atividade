@@ -4,30 +4,43 @@ pipeline{
 
   parameters {
     choice(
-      choices: ['homologacao'],
+      choices: ['homologacao' , 'producao', 'teste'],
       description: '',
       name: 'ambiente')
   }
-   environment {
-        PORT="4200"
-        SECRET="a1e3f062caa51fd4651f4b68f270c95f5912b01c4d0d95689603f75b4d34e6b9"
-        clientId_Discord="946172169111601223"
-        clientSecretDiscord="-64d0g0XYS9tJ-paoQceARYkmqkxY5xG"
-        callBackDiscord="/auth/discord/redirect"
-        redirect_url="http://localhost:3000/"
-    }
   stages {
     stage ('Set Environment') {
       steps {
         script {
-          if (params.ambiente.equals('homologacao')){
+          if (params.ambiente.equals('producao')){
+            env.SRV01="cerssv01"
+            env.SRV02="cerssv02"
+            env.SRV01_IP="192.168.12.61"
+            env.SRV02_IP="192.168.11.44"
+            env.CONTAINER="${env.JOB_BASE_NAME}"
+            env.PORT="3021"
+            env.URL_NPM_REPOSITORY="http://devapps.cers.com.br/nexus/repository/npm-group/"
+            env.TZ="America/Recife"
+          }else if (params.ambiente.equals('homologacao')){
             env.SRV01="hml02"
+            //env.SRV02=""
             env.SRV01_IP="192.168.10.120"
+            //env.SRV02_IP=""
             env.CONTAINER="${env.JOB_BASE_NAME}"
             env.PORT="4200"
             env.URL_NPM_REPOSITORY="http://devapps.cers.com.br/nexus/repository/npm-group/"
+            //env.JAVA_OPTS='-Xmx128m -Duser.timezone=America/Fortaleza'
             env.TZ="America/Recife"
-		      }
+		  }else if (params.ambiente.equals('teste')){
+            env.SRV01="lnxhml01"
+            //env.SRV02=""
+            env.SRV01_IP="192.168.10.140"
+            //env.SRV02_IP=""
+            env.CONTAINER="${env.JOB_BASE_NAME}"
+            env.PORT="8111"
+            env.URL_NPM_REPOSITORY="http://devapps.cers.com.br/nexus/repository/npm-group/"
+            env.TZ="America/Recife"
+          }
           withCredentials([usernamePassword(credentialsId: 'healthcheck_token', usernameVariable: 'USERNAME', passwordVariable: 'PASSWD')]) {
             env.AUTH="${PASSWD}"
           }
@@ -46,6 +59,10 @@ pipeline{
             customImage.push()
             // push image tagged form hom
             customImage.push("hom")
+            if (params.ambiente.equals('producao')){
+              // push image tagged from latest
+              customImage.push("latest")
+            }
           }
         }
       }
