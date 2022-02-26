@@ -1,6 +1,6 @@
 version: '3.4'
 services:
-  app:
+  api:
     container_name: ${CONTAINER:-node-manager-activity}
     hostname: ${SRV}-${CONTAINER:-node-manager-activity}
     image: ${REGISTRY:-672821892059.dkr.ecr.us-east-1.amazonaws.com}/${CONTAINER:-node-manager-activity}:${BUILD_ID:-hom}
