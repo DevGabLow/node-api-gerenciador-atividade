@@ -5,14 +5,14 @@ const rowDefine = {
     parents: {
         id: "id",
         email: "email",
-        logged_in_discord:"logged_in_discord",
+        logged_in_discord: "logged_in_discord",
         discord_app_id: "discord_app_id",
         avatar: "avatar"
     }
 };
 
 const findUser = (user = { email: "" }, callback) => {
-    connection.query(`SELECT * FROM ${rowDefine.columName} u WHERE u.${rowDefine.parents.email} = ?`,[user.email], function (error, results, fields) {
+    connection.query(`SELECT * FROM ${rowDefine.columName} u WHERE u.${rowDefine.parents.email} = ?`, [user.email], function (error, results, fields) {
         if (error) throw error;
         if (results.length > 0) {
             return callback(results[0])
@@ -23,10 +23,32 @@ const findUser = (user = { email: "" }, callback) => {
 
 const updateDiscord = (profile = {}) => {
     connection.query(`UPDATE ${rowDefine.columName} SET ${rowDefine.parents.logged_in_discord} = 1, ${rowDefine.parents.discord_app_id} = ?, avatar = ? where ${rowDefine.parents.id} = ?`,
-    [profile.id, profile.avatar, profile.userId], function (error, results, fields) {
+        [profile.id, profile.avatar, profile.userId], function (error, results, fields) {
+            if (error) throw error;
+        });
+}
+
+const findAllUserConnected = (callback) => {
+    connection.query(`SELECT u.id, u.name,u.email, ulr.last_activity FROM ${rowDefine.columName} u
+    LEFT JOIN users_logged_report ulr on ulr.user_id = u.id
+    WHERE  DATE_SUB(?, INTERVAL 1 hour) <= ulr.session_started_at AND ulr.kill_logged_by_admin is FALSE`,[new Date()], function (error, results, fields) {
         if (error) throw error;
+        if (results.length > 0) {
+            return callback(results)
+        }
+        return callback([])
+    });
+}
+
+const findAllUsers = (callback) => {
+    connection.query(`SELECT *FROM ${rowDefine.columName} `,[], function (error, results, fields) {
+        if (error) throw error;
+        if (results.length > 0) {
+            return callback(results)
+        }
+        return callback([])
     });
 }
 
 
-module.exports = { findUser, updateDiscord }
+module.exports = { findUser, updateDiscord, findAllUserConnected, findAllUsers }

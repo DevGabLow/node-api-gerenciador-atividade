@@ -8,7 +8,9 @@ const { serialize } = require('cookie');
 const { findUser } = require('../../executeSchemas/user');
 
 const { NOT_AUTHORIZATION } = require('../../util/messages/errors');
-const { signIn } = require('../../util/jwt/jwtUtil');
+const { signIn, decode } = require('../../util/jwt/jwtUtil');
+const loggedSchema = require('../../executeSchemas/logged_schema');
+const { findByUserId, deleteSessionByUserId } = require('../../executeSchemas/logged_schema');
 
 
 router.get('/login', async (req, res) => {
@@ -30,6 +32,9 @@ router.get('/login', async (req, res) => {
                 if (passwordEquals) {
                     delete result.password;
                     const token = signIn(result);
+                    result.token = token;
+
+                    loggedSchema.insertSessionStart(result);
 
                     const serialized = serialize("cookieAuth", token, {
                         httpOnly: true,
@@ -53,12 +58,35 @@ router.get('/login', async (req, res) => {
 
 })
 
+const buildUserByCookie = (req = null) => {
+    if (req) {
+        const cookieAuth = req.cookies.cookieAuth;
+        const cookieDecode = decode(cookieAuth);
+        return cookieDecode?.user;
+    }
+}
+
 router.get('/logout', (req, res) => {
-    res.status(202).clearCookie("cookieAuth").redirect('/auth/redirect')
+    const user = buildUserByCookie(req);
+    if (user?.id) {
+        deleteSessionByUserId(user.id)
+        res.status(202).clearCookie("cookieAuth").redirect('/auth/redirect')
+    }
 })
 
 router.get('/cookieserver', (req, res) => {
-    res.json(req.cookies)
+    if (buildUserByCookie(req)) {
+        const user = buildUserByCookie(req);
+        findByUserId(user.id, (result) => {
+            if (result?.kill_logged_by_admin) {
+                res.status(202).redirect('/auth/logout')
+            } else {
+                res.json(req.cookies)
+            }
+        })
+    } else {
+        res.json(null)
+    }
 })
 
 router.get("/redirect", (req, res) => {

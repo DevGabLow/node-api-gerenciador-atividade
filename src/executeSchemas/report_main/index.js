@@ -11,7 +11,7 @@ const rowDefine = {
 };
 
 const findByUserId = ( id = null , callback) => {
-    connection.query(`SELECT * FROM ${rowDefine.columName} rm WHERE rm.${rowDefine.parents.user_id} = ? AND rm.created_at >= ?`,[id, new Date()], function (error, results, fields) {
+    connection.query(`SELECT * FROM ${rowDefine.columName} rm WHERE rm.${rowDefine.parents.user_id} = ? AND DATE_SUB(?, INTERVAL 24 hour) <= rm.created_at `,[id, new Date()], function (error, results, fields) {
         if (error) throw error;
         if (results.length > 0) {
             return callback(results[0])
@@ -28,4 +28,4 @@ const insertReportMain = (reportMain = {}) => {
 } 
 
 
-module.exports = { reportMainExecute: {findByUserId, insertReportMain} }
+module.exports = { reportMainExecute: { , insertReportMain} }
