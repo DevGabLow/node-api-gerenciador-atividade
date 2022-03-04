@@ -39,7 +39,7 @@ router.get('/login', async (req, res) => {
                     const serialized = serialize("cookieAuth", token, {
                         httpOnly: false,
                         secure: false,
-                        sameSite: "strict",
+                        sameSite: "none",
                         maxAge: 1 * 60 * 60 * 1000, //1h
                         path: "/"
                     });
