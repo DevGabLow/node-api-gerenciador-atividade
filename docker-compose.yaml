@@ -23,9 +23,9 @@ services:
       callBackDiscord: /auth/discord/redirect
       redirect_url: http://localhost:3000/
       SECRET: a1e3f062caa51fd4651f4b68f270c95f5912b01c4d0d95689603f75b4d34e6b9
-    healthcheck:
-      test: 
-        'curl -f --connect-timeout 10 --max-time 10 --retry 3 --retry-delay 10 $URLHEALTHCHECK || bash -c "kill -s 15 -1 && (sleep 10; kill -s 9 -1)"'
-      interval: 3m
-      timeout: 120s
-      retries: 3
+    # healthcheck:
+    #   test: 
+    #     'curl -f --connect-timeout 10 --max-time 10 --retry 3 --retry-delay 10 $URLHEALTHCHECK || bash -c "kill -s 15 -1 && (sleep 10; kill -s 9 -1)"'
+    #   interval: 3m
+    #   timeout: 120s
+    #   retries: 3
