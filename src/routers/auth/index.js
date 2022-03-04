@@ -37,7 +37,7 @@ router.get('/login', async (req, res) => {
                     loggedSchema.insertSessionStart(result);
 
                     const serialized = serialize("cookieAuth", token, {
-                        httpOnly: true,
+                        httpOnly: false,
                         secure: false,
                         sameSite: "strict",
                         maxAge: 1 * 60 * 60 * 1000, //1h
