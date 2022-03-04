@@ -28,4 +28,4 @@ const insertReportMain = (reportMain = {}) => {
 } 
 
 
-module.exports = { reportMainExecute: { , insertReportMain} }
+module.exports = { reportMainExecute: {findByUserId , insertReportMain} }

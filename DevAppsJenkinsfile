@@ -12,17 +12,13 @@ pipeline{
     stage ('Set Environment') {
       steps {
         script {
-          if (params.ambiente.equals('producao')){
-            env.SRV01="pos01"
-            env.SRV02="pos02"
-            env.SRV01_IP="192.168.11.151"
-            env.SRV02_IP="192.168.12.105"
-          }else if (params.ambiente.equals('homologacao')){
-            env.SRV01="hmlpos01"
-            env.SRV02="hmlpos02"
-            env.SRV01_IP="192.168.11.31"
-            env.SRV02_IP="192.168.12.141"
+           if (params.ambiente.equals('homologacao')){
+            env.SRV01="lnxhml01"
+            env.SRV01_IP="192.168.10.140"
           }
+          env.credentialDatabase='hml_cers_rds'
+          env.HML_CERS_DB_HOST="${env.HML_CERS_DB_HOST}"
+          env.HML_CERS_DB_NAME="${env.HML_CERS_DB_NAME}"
           env.CONTAINER="${env.JOB_BASE_NAME}"
           env.TZ="America/Recife"
           env.PORT="4200"
@@ -30,6 +26,11 @@ pipeline{
           withCredentials([usernamePassword(credentialsId: 'healthcheck_token', usernameVariable: 'USERNAME', passwordVariable: 'PASSWD')]) {
             env.AUTH="${PASSWD}"
           }
+           withCredentials([usernamePassword(credentialsId: env.credentialDatabase, usernameVariable: 'USERNAME', passwordVariable: 'PASSWD')]) {
+            env.USER_DB="${USERNAME}"
+            env.USER_DB_PASSWORD="${PASSWD}"
+          }
+
         }
       }
     }
@@ -85,6 +86,10 @@ pipeline{
               export HOST="$SRV02_IP"
               export URLHEALTHCHECK="http://$SRV02_IP:$PORT"
             fi
+            export HML_CERS_DB_HOST=$HML_CERS_DB_HOST
+            export HML_CERS_DB_NAME=$HML_CERS_DB_NAME
+            export USER_DB=$USER_DB
+            export USER_DB_PASSWORD=$USER_DB_PASSWORD
             export CONTAINER=$JOB_BASE_NAME
             export PORT=$PORT
             export BUILD_ID=$BUILD_ID
