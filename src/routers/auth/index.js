@@ -13,7 +13,7 @@ const loggedSchema = require('../../executeSchemas/logged_schema');
 const { findByUserId, deleteSessionByUserId } = require('../../executeSchemas/logged_schema');
 
 
-router.get('/login', async (req, res) => {
+router.get('/login', async(req, res) => {
 
     if (!req.headers.authorization || req.headers.authorization.indexOf('Basic ') === -1) {
         return res.status(401).json(NOT_AUTHORIZATION);
@@ -39,7 +39,7 @@ router.get('/login', async (req, res) => {
                     const serialized = serialize("cookieAuth", token, {
                         httpOnly: false,
                         secure: false,
-                        sameSite: "none",
+                        sameSite: 'lax',
                         maxAge: 1 * 60 * 60 * 1000, //1h
                         path: "/"
                     });
@@ -62,13 +62,13 @@ const buildUserByCookie = (req = null) => {
     if (req) {
         const cookieAuth = req.cookies.cookieAuth;
         const cookieDecode = decode(cookieAuth);
-        return cookieDecode?.user;
+        return cookieDecode ? .user;
     }
 }
 
 router.get('/logout', (req, res) => {
     const user = buildUserByCookie(req);
-    if (user?.id) {
+    if (user ? .id) {
         deleteSessionByUserId(user.id)
         res.status(202).clearCookie("cookieAuth").redirect('/auth/redirect')
     }
@@ -78,7 +78,7 @@ router.get('/cookieserver', (req, res) => {
     if (buildUserByCookie(req)) {
         const user = buildUserByCookie(req);
         findByUserId(user.id, (result) => {
-            if (result?.kill_logged_by_admin) {
+            if (result ? .kill_logged_by_admin) {
                 res.status(202).redirect('/auth/logout')
             } else {
                 res.json(req.cookies)
@@ -107,7 +107,7 @@ router.get('/discord', passport.authenticate('discord'));
 
 router.get('/discord/redirect', passport.authenticate('discord', {
     failureRedirect: '/auth/logout'
-}), function (req, res) {
+}), function(req, res) {
 
 
 
