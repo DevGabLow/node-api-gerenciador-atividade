@@ -37,11 +37,11 @@ router.get('/login', async(req, res) => {
                     loggedSchema.insertSessionStart(result);
 
                     const serialized = serialize("cookieAuth", token, {
-                        httpOnly: false,
-                        secure: false,
-                        sameSite: 'lax',
+                        httpOnly: true,
+                        secure: true,
                         maxAge: 1 * 60 * 60 * 1000, //1h
-                        path: "/"
+                        path: "",
+                        domain: "atividade.hml.cers.com.br"
                     });
                     res.setHeader("Set-Cookie", serialized);
                     res.status(200).json({ message: "Logged!" });
